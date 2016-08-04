@@ -105,17 +105,29 @@ def rnn_forward(x, h0, Wx, Wh, b):
   - h: Hidden states for the entire timeseries, of shape (N, T, H).
   - cache: Values needed in the backward pass
   """
-  h, cache = None, None
+  h, cache = None, []
   ##############################################################################
   # TODO: Implement forward pass for a vanilla RNN running on a sequence of    #
   # input data. You should use the rnn_step_forward function that you defined  #
   # above.                                                                     #
   ##############################################################################
-  pass
+  N, T, D = x.shape
+  N, H = h0.shape
+  h = np.zeros((N, T+1, H))
+  h[:, 0, :] = h0
+
+  print h.shape
+
+  for t in xrange(0, T):
+      x_t = x[:, t, :]
+      next_h, cache_t = rnn_step_forward(x_t, h[:, t, :], Wx, Wh, b)
+      h[:, t+1, :] = next_h
+      cache.append(cache_t)
+
   ##############################################################################
   #                               END OF YOUR CODE                             #
   ##############################################################################
-  return h, cache
+  return h[:, 1:, :], cache
 
 
 def rnn_backward(dh, cache):
@@ -144,7 +156,6 @@ def rnn_backward(dh, cache):
   ##############################################################################
   return dx, dh0, dWx, dWh, db
 
-
 def word_embedding_forward(x, W):
   """
   Forward pass for word embeddings. We operate on minibatches of size N where
@@ -171,7 +182,6 @@ def word_embedding_forward(x, W):
   #                               END OF YOUR CODE                             #
   ##############################################################################
   return out, cache
-
 
 def word_embedding_backward(dout, cache):
   """
@@ -247,7 +257,6 @@ def lstm_step_forward(x, prev_h, prev_c, Wx, Wh, b):
   
   return next_h, next_c, cache
 
-
 def lstm_step_backward(dnext_h, dnext_c, cache):
   """
   Backward pass for a single timestep of an LSTM.
@@ -278,7 +287,6 @@ def lstm_step_backward(dnext_h, dnext_c, cache):
   ##############################################################################
 
   return dx, dprev_h, dprev_c, dWx, dWh, db
-
 
 def lstm_forward(x, h0, Wx, Wh, b):
   """
@@ -314,7 +322,6 @@ def lstm_forward(x, h0, Wx, Wh, b):
 
   return h, cache
 
-
 def lstm_backward(dh, cache):
   """
   Backward pass for an LSTM over an entire sequence of data.]
@@ -342,7 +349,6 @@ def lstm_backward(dh, cache):
   
   return dx, dh0, dWx, dWh, db
 
-
 def temporal_affine_forward(x, w, b):
   """
   Forward pass for a temporal affine layer. The input is a set of D-dimensional
@@ -364,7 +370,6 @@ def temporal_affine_forward(x, w, b):
   out = x.reshape(N * T, D).dot(w).reshape(N, T, M) + b
   cache = x, w, b, out
   return out, cache
-
 
 def temporal_affine_backward(dout, cache):
   """
@@ -388,7 +393,6 @@ def temporal_affine_backward(dout, cache):
   db = dout.sum(axis=(0, 1))
 
   return dx, dw, db
-
 
 def temporal_softmax_loss(x, y, mask, verbose=False):
   """
